@@ -1,0 +1,74 @@
+1. Get vim and compile with cscope enabled.
+
+wget ftp://ftp.vim.org/pub/vim/unix/vim-8.1.tar.bz2
+
+tar -jxvf vim-8.1.tar.bz2
+cd vim81
+./configure --enable-cscope
+cd src && make first
+
+mkdir ~/bin
+cp vim ~/bin
+
+# In my.bashrc file, set following exports
+export PATH=$HOME/bin:$PATH
+export VIMRUNTIME=~/vim81/runtime/
+
+cd ~/bin/
+
+2. In this directory, create a script called 'gentags' with following content
+================================================================
+#!/bin/bash
+
+CSCOPE_DIR="$PWD/cscope"
+
+if [ ! -d "$CSCOPE_DIR" ]; then
+mkdir "$CSCOPE_DIR"
+fi
+
+echo "Finding files ..."
+find "$PWD" -name '*.[ch]' \
+-o -name '*properties' \
+-o -name '*.cpp' \
+-o -name '*.cc' \
+-o -name '*.hpp' \
+-o -name '*.py' > "$CSCOPE_DIR/cscope.files"
+
+echo "Adding files to cscope db: $PWD/cscope.db ..."
+cscope -b -i "$CSCOPE_DIR/cscope.files"
+
+export CSCOPE_DB="$PWD/cscope.out"
+echo "Exported CSCOPE_DB to: '$CSCOPE_DB'"
+printf "\n"
+echo "Set 'export CSCOPE_DB=$PWD/cscope.out' in your my.bashrc to set it permanently OR "
+echo "Run 'source gentags' to export CSCOPE_DB for this session and this repo"
+================================================================
+
+chmod + gentags
+
+3. Go to the root directory (ex: $HOME/code/git/project) from where you want the cscope to scan your code and run 'gentags'
+
+4. Set tag jump mappings and add the file to vim plugins.
+
+mkdir ~/.vim/plugin
+cd ~/.vim/plugin
+wget http://cscope.sourceforge.net/cscope_maps.vim
+
+
+5. Create ~/.vimrc with following contents
+=======================================
+syntax on
+set hlsearch
+hi Search ctermbg=Yellow
+
+set number
+set backspace=indent,eol,start
+source ~/.vim/plugin/cscope_maps.vim
+=======================================
+
+
+6. Refer 'cscope_maps.vim' for shortcut definition of all the tag jumps.
+
+7. If you are working with multiple repositories interchangeably and since CSCOPE_DB sets only one cscope.out path, you can run ‘source gentags’ from that repository (where the cscope.out file is present) and it will export the CSCOPE_DB for the session and you can do the same thing when you switch to another repository.
+
+
